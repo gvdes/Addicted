@@ -10,6 +10,10 @@ use App\Http\Controllers\WithdrawalsController;
 use App\Http\Controllers\AssistController;
 use App\Http\Controllers\WarehousesController;
 use App\Http\Controllers\ResourcesController;
+use App\Http\Controllers\SalesController;
+use App\Http\Controllers\StocksController;
+
+
 
 
 Route::prefix('providers')->group(function(){
@@ -60,4 +64,19 @@ Route::prefix('warehouses')->group(function(){
 
 Route::prefix('resources')->group(function(){
     Route::get('/ping',[ResourcesController::class,'ping']);
+    Route::get('/match',[ResourcesController::class,'matchProducts']);
+    Route::get('/matchPro',[ResourcesController::class,'matchProvider']);
+    Route::get('/matchCat',[ResourcesController::class,'matchCategories']);
+    Route::get('/matchCli',[ResourcesController::class,'matchClient']);
+
+});
+
+Route::prefix('sales')->group(function(){
+    Route::get('/',[SalesController::class,'replySales']);
+    Route::get('/match',[SalesController::class,'matchSales']);
+
+});
+
+Route::prefix('stocks')->group(function(){
+    Route::get('/',[StocksController::class,'replyStock']);
 });
