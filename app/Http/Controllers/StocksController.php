@@ -32,7 +32,7 @@ class StocksController extends Controller
         $warehouses = Warehouse::where('_store',$workpoint)->get();
         foreach($warehouses as $warehouse){
             $inicio = microtime(true);
-            // echo 'actualizando '.$warehouse->alias." \n";
+            echo 'actualizando '.$warehouse->alias." \n";
             try{
                 $sto  = "SELECT ARTSTO, ALMSTO,  CLng(ACTSTO) AS ACT,  CLng(DISSTO) AS DIS FROM F_STO WHERE ALMSTO = "."'".$warehouse->alias."'";
                 $exec = $this->conn->prepare($sto);
