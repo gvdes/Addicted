@@ -46,8 +46,8 @@ class StocksController extends Controller
             ->select('products.code AS ARTSTO', 'warehouses.alias AS ALMSTO', 'product_stock._current AS ACT', 'product_stock.available AS DIS')
             ->get()->toArray();
 
-            $texdb = array_map(function($val){ return implode(',',$val);},$stodb);
-            $textacc = array_map(function($val){ return implode(',',$val);},$stocks);
+            $texdb = array_map(function($val){ return implode(',',array_map('utf8_encode',$val));},$stodb);
+            $textacc = array_map(function($val){ return implode(',',array_map('utf8_encode',$val));},$stocks);
             $dif = array_diff($textacc,$texdb);
             $arregloact = array_map(function($val){ return explode(',',$val);},$dif);
             $act = array_values($arregloact);
