@@ -8,6 +8,7 @@ use App\Models\Warehouse;
 use App\Models\Product;
 use App\Models\ProductStock;
 use Illuminate\Support\Facades\Stopwatch;
+use Illuminate\Support\Facades\DB;
 
 
 
@@ -34,7 +35,7 @@ class StocksController extends Controller
             $inicio = microtime(true);
             echo 'actualizando '.$warehouse->alias." \n";
             try{
-                $sto  = "SELECT ARTSTO, ALMSTO,  CLng(ACTSTO) AS ACT,  CLng(DISSTO) AS DIS FROM F_STO WHERE ALMSTO = "."'".$warehouse->alias."'";
+                $sto  = "SELECT ARTSTO, ALMSTO,  CLng(ACTSTO) AS ACT FROM F_STO WHERE ALMSTO = "."'".$warehouse->alias."'";
                 $exec = $this->conn->prepare($sto);
                 $exec -> execute();
                 $stocks=$exec->fetchall(\PDO::FETCH_ASSOC);
@@ -43,24 +44,34 @@ class StocksController extends Controller
             $stodb = ProductStock::join('products', 'products.id', '=', 'product_stock._product')
             ->join('warehouses', 'warehouses.id', '=', 'product_stock._warehouse')
             ->where('warehouses.id', '=', $warehouse->id)
-            ->select('products.code AS ARTSTO', 'warehouses.alias AS ALMSTO', 'product_stock._current AS ACT', 'product_stock.available AS DIS')
+            ->select('products.code AS ARTSTO', 'warehouses.alias AS ALMSTO', 'product_stock._current AS ACT','product_stock.reserved AS DIS')
             ->get()->toArray();
 
-            $texdb = array_map(function($val){ return implode(',',array_map('utf8_encode',$val));},$stodb);
+            $texdb = array_map(function($val){ unset($val['DIS']); return implode(',',array_map('utf8_encode', $val ));},$stodb);
             $textacc = array_map(function($val){ return implode(',',array_map('utf8_encode',$val));},$stocks);
             $dif = array_diff($textacc,$texdb);
             $arregloact = array_map(function($val){ return explode(',',$val);},$dif);
             $act = array_values($arregloact);
             $actualizados = [];
             foreach($act as $ac){
-                $update  = ProductStock::join('products', 'products.id', '=', 'product_stock._product')
-                ->join('warehouses', 'warehouses.id', '=', 'product_stock._warehouse')
-                ->where('warehouses.id', $warehouse->id)  // Cambia 'GEN' a la clave correcta según tu estructura de datos
-                ->where('products.code', $ac[0])
-                ->update([
-                    '_current' => $ac[2],
-                    'available' => $ac[3],
-                ]);
+                $codigo = $ac[0];
+                $product = Product::where('code',$codigo)->value('id');
+                $disponible = collect($stodb)->first(function ($item) use ($codigo) {
+                    return $item['ARTSTO'] === $codigo;
+                });
+                if($disponible){
+                     $ac['DIS'] = $ac[2] - $disponible['DIS'];
+                }else {
+                    $ac['DIS'] = 0;
+                }
+
+                $update =ProductStock::where('_warehouse', $warehouse->id)
+                        ->where('_product', $product)
+                        ->update([
+                            '_current' => $ac[2],
+                            'available' => $ac['DIS'],
+                        ]);
+                ;
                 if($update > 0){
                     $actualizados[] = $update;
                 }
