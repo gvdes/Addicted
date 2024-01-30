@@ -56,7 +56,6 @@ class StocksController extends Controller
             foreach($act as $ac){
                 $codigo = $ac[0];
                 $product = Product::where('code',$codigo)->value('id');
-                if($product){
                     $disponible = collect($stodb)->first(function ($item) use ($codigo) {
                         return $item['ARTSTO'] === $codigo;
                     });
@@ -76,7 +75,7 @@ class StocksController extends Controller
                     if($update > 0){
                         $actualizados[] = $update;
                     }
-                }
+
             }
             // $actuwar[] = ['warehouse'=>[$warehouse->alias=>count($actualizados)]];
             $termino = microtime(true);
