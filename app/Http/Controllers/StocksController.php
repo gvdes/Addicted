@@ -60,33 +60,32 @@ class StocksController extends Controller
             $arregloact = array_map(function($val){ return explode(',',$val);},$dif);
             $act = array_values($arregloact);
             $actualizados = [];
-            foreach($act as $ac){
-                $codigo = $ac[0];
-                $product = Product::where('code',$codigo)->value('id');
-                    $disponible = collect($stodb)->first(function ($item) use ($codigo) {
-                        return $item['ARTSTO'] === $codigo;
-                    });
-                    if($disponible){
-                         $ac['DIS'] = $ac[2] - $disponible['DIS'];
-                    }else {
-                        $ac['DIS'] = 0;
-                    }
 
-                    $update =ProductStock::where('_warehouse', $warehouse->id)
-                            ->where('_product', $product)
-                            ->update([
-                                '_current' => $ac[2],
-                                'available' => $ac['DIS'],
-                            ]);
-                    ;
-                    if($update > 0){
-                        $actualizados[] = $update;
-                    }
-
-            }
+            $updates = array_map(function($val) use ($warehouse) {
+                $product = Product::where('code',$val[0])->value('id');
+                $available = ProductStock::where('_warehouse',$warehouse->id)->where('_product',$product)->value('reserved');
+                        $res = [
+                            "_warehouse"=>$warehouse->id,
+                            "_product"=>$product,
+                            "_current"=>$val[2],
+                            "available"=>$val[2] - $available,
+                            "_state"=>2,
+                            "_min"=>0,
+                            "_max"=>0,
+                            "reserved"=>0,
+                            "in_coming"=>0
+                        ];
+                        return $res;
+            },$act);
+            $sinnull = array_filter($updates, function($val){
+                return $val['_product'] !== null;
+            });
+            $upd = array_values($sinnull);
+            $updst = ProductStock::upsert($upd,['_warehouse','_product'],['_current','available']);
+            $actualizados = $updst / 2;
             // $actuwar[] = ['warehouse'=>[$warehouse->alias=>count($actualizados)]];
             $termino = microtime(true);
-            echo  'warehouse '.' => '.$warehouse->alias.' => '.count($actualizados).' tiempo :'.round($termino-$inicio,2)." seg."." \n";
+            echo  'warehouse '.' => '.$warehouse->alias.' => '.$actualizados.' tiempo :'.round($termino-$inicio,2)." seg."." \n";
             }
         echo 'fin de actualizaciones :)'." \n";
         // return $texdb;
