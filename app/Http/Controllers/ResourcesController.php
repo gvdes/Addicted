@@ -59,7 +59,9 @@ class ResourcesController extends Controller
                     "poblacion"=>$provider['POBPRO'],
                     "codigo_postal"=>$provider['CPOPRO'],
                     "delegacion"=>$provider['PROPRO'],
-                ])
+                ]),
+                "_type"=>1,
+                "_state"=>1
             ];
         }
         $provi = new Provider;
