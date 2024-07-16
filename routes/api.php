@@ -12,6 +12,8 @@ use App\Http\Controllers\WarehousesController;
 use App\Http\Controllers\ResourcesController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\StocksController;
+use App\Http\Controllers\CashController;
+
 
 
 
@@ -79,4 +81,8 @@ Route::prefix('sales')->group(function(){
 
 Route::prefix('stocks')->group(function(){
     Route::get('/',[StocksController::class,'replyStock']);
+});
+
+Route::prefix('cash')->group(function(){
+    Route::post('/OpenCash',[CashController::class,'OpenCash']);
 });
