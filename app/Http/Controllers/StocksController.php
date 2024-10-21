@@ -81,8 +81,17 @@ class StocksController extends Controller
                 return $val['_product'] !== null;
             });
             $upd = array_values($sinnull);
-            $updst = ProductStock::upsert($upd,['_warehouse','_product'],['_current','available']);
-            $actualizados = $updst / 2;
+            $chunks = array_chunk($upd, 500); // Dividir en lotes de 500 registros
+            $act = [];
+            foreach ($chunks as $chunk) {
+
+                $updst = ProductStock::upsert($chunk,['_warehouse','_product'],['_current','available']);
+                $act[] = $updst;
+            }
+
+            $actualizados = count($act);
+            // $updst = ProductStock::upsert($upd,['_warehouse','_product'],['_current','available']);
+            // $actualizados = $updst / 2;
             // $actuwar[] = ['warehouse'=>[$warehouse->alias=>count($actualizados)]];
             $termino = microtime(true);
             echo  'warehouse '.' => '.$warehouse->alias.' => '.$actualizados.' tiempo :'.round($termino-$inicio,2)." seg."." \n";
